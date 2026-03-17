@@ -25,7 +25,6 @@ export default function LaunchTab() {
     setResult(null);
 
     try {
-      // Step 1: Build tx on backend
       setStep('Uploading metadata to IPFS...');
       const buildRes = await buildLaunchTx({
         creatorWallet: wallet.publicKey.toBase58(),
@@ -33,27 +32,13 @@ export default function LaunchTab() {
         symbol: form.symbol.toUpperCase(),
       });
 
-      // Step 2: Sign with wallet
-      setStep('Waiting for wallet signature...');
-      const { signature } = await wallet.signAndSendTransaction(
-        buildRes.transaction,
-        buildRes.mintKeypairBytes
-      );
-
-      // Step 3: Confirm
-      setStep('Confirming on Solana...');
-      await submitSignedTx({
-        signedTransaction: buildRes.transaction, // already sent above, this just logs
-        lastValidBlockHeight: buildRes.lastValidBlockHeight,
-        mintAddress: buildRes.mintAddress,
-      });
-
+      // Lightning API handles everything — no wallet signing needed
       setResult({
-        signature,
+        signature: buildRes.signature,
         mintAddress: buildRes.mintAddress,
         metadataUri: buildRes.metadataUri,
-        pumpFunUrl: `https://pump.fun/${buildRes.mintAddress}`,
-        explorerUrl: `https://solscan.io/tx/${signature}`,
+        pumpFunUrl: buildRes.pumpFunUrl,
+        explorerUrl: buildRes.explorerUrl,
       });
       toast.success('Token launched successfully!');
     } catch (err) {
