@@ -106,52 +106,65 @@ function LandingPage({ onLaunch, onDocs }) {
       {/* Features */}
       <section className="land-features" id="features">
         <div className="land-section-label">What's included</div>
-        <h2 className="land-section-title">Everything your token needs<br/><span className="land-white-hl">to survive.</span></h2>
+        <h2 className="land-section-title">Built different.<br/><span className="land-white-hl">Every layer.</span></h2>
 
-        <div className="feat-grid">
-          <div className="feat-card">
-            <div className="feat-icon feat-icon-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        {/* Row 1 — big hero feature left, two small right */}
+        <div className="feat-row-1">
+          <div className="feat-big">
+            <div className="feat-big-num">01</div>
+            <div className="feat-big-tag">Core</div>
+            <h3 className="feat-big-title">Anti-rug suite</h3>
+            <p className="feat-big-desc">LP auto-lock from day one. Mint authority renounced. Freeze authority renounced. Max wallet cap. Honeypot protection. Every protection is toggled before launch and verifiable on-chain — buyers can confirm everything before they buy.</p>
+            <div className="feat-big-pills">
+              <span>LP Lock</span>
+              <span>Mint Renounce</span>
+              <span>Freeze Renounce</span>
+              <span>Honeypot Check</span>
+              <span>Max Wallet Cap</span>
             </div>
-            <h3>One-click launch</h3>
-            <p>Fill in details, connect wallet, hit deploy. Your token is live on pump.fun in under 30 seconds.</p>
           </div>
-          <div className="feat-card feat-card-highlight">
-            <div className="feat-card-glow"/>
-            <div className="feat-icon feat-icon-white">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div className="feat-small-col">
+            <div className="feat-small">
+              <div className="feat-small-num">02</div>
+              <h3>One-click launch</h3>
+              <p>Fill in details, connect wallet, hit deploy. Live on pump.fun in under 30 seconds.</p>
             </div>
-            <h3>Anti-rug suite</h3>
-            <p>LP auto-lock, mint renounce, freeze renounce, max wallet cap, and honeypot protection — all pre-configured.</p>
-            <div className="feat-badge">Most important</div>
+            <div className="feat-small">
+              <div className="feat-small-num">03</div>
+              <h3>Dev vesting</h3>
+              <p>Auto-vest your allocation over 3–12 months with a cliff. Schedule shown on-chain before launch.</p>
+            </div>
           </div>
-          <div className="feat-card">
-            <div className="feat-icon feat-icon-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+
+        {/* Row 2 — three horizontal stat-style cards */}
+        <div className="feat-row-2">
+          <div className="feat-stat-card">
+            <div className="feat-stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             </div>
-            <h3>Dev vesting</h3>
-            <p>Auto-vest your allocation over 3–12 months with a cliff period. Buyers can verify on-chain before they buy.</p>
+            <div>
+              <div className="feat-stat-title">Volume engine</div>
+              <div className="feat-stat-sub">Automated buy/sell cycles. Keep the chart alive and push trending.</div>
+            </div>
           </div>
-          <div className="feat-card">
-            <div className="feat-icon feat-icon-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <div className="feat-stat-card">
+            <div className="feat-stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
             </div>
-            <h3>Volume engine</h3>
-            <p>Schedule automated buy/sell cycles to keep your chart alive and push to the pump.fun trending page.</p>
+            <div>
+              <div className="feat-stat-title">IPFS metadata</div>
+              <div className="feat-stat-sub">Image and metadata pinned to IPFS via Pinata. Permanent and decentralized.</div>
+            </div>
           </div>
-          <div className="feat-card">
-            <div className="feat-icon feat-icon-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <div className="feat-stat-card">
+            <div className="feat-stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
-            <h3>IPFS metadata</h3>
-            <p>Token image and metadata are automatically pinned to IPFS via Pinata — permanent and decentralized.</p>
-          </div>
-          <div className="feat-card">
-            <div className="feat-icon feat-icon-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div>
+              <div className="feat-stat-title">Wallet native</div>
+              <div className="feat-stat-sub">Phantom, Solflare, Coinbase. Your keys never leave your device.</div>
             </div>
-            <h3>Wallet native</h3>
-            <p>Connects with Phantom, Solflare, and Coinbase Wallet. The server never touches your private keys.</p>
           </div>
         </div>
       </section>
