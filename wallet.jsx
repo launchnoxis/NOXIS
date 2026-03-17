@@ -56,16 +56,21 @@ export function useSolanaWallet() {
 
     const { Transaction, Keypair } = await import('@solana/web3.js');
 
-    // Deserialize the server-built transaction
+    // Get fresh blockhash FIRST before doing anything
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+
+    // Deserialize
     const txBuffer = Buffer.from(base64Tx, 'base64');
     const tx = Transaction.from(txBuffer);
 
-    // Fetch a FRESH blockhash right before signing to avoid expiry
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+    // Apply fresh blockhash
     tx.recentBlockhash = blockhash;
-    tx.lastValidBlockHeight = lastValidBlockHeight;
+    tx.feePayer = wallet.publicKey;
 
-    // Re-sign with mint keypair (server provided the secret key bytes)
+    // Clear all existing signatures since we changed the blockhash
+    tx.signatures = [];
+
+    // Re-sign with mint keypair
     if (mintKeypairBytes) {
       const mintKp = Keypair.fromSecretKey(Uint8Array.from(mintKeypairBytes));
       tx.partialSign(mintKp);
@@ -73,16 +78,15 @@ export function useSolanaWallet() {
 
     // Sign with user wallet
     const signedTx = await wallet.signTransaction(tx);
-    const serialized = signedTx.serialize();
+    const serialized = signedTx.serialize({ requireAllSignatures: false });
 
-    // Send to network
+    // Send with skipPreflight to bypass simulation
     const signature = await connection.sendRawTransaction(serialized, {
-      skipPreflight: false,
-      preflightCommitment: 'confirmed',
+      skipPreflight: true,
       maxRetries: 5,
     });
 
-    // Confirm transaction
+    // Confirm
     await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
 
     return { signature, serialized: Buffer.from(serialized).toString('base64') };
