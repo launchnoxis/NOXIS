@@ -93,11 +93,8 @@ export default function LaunchTab() {
               onChange={(e) => set('description', e.target.value)} maxLength={500}
               rows={3}
             />
-            <label>Image URL</label>
-            <input
-              type="text" placeholder="https://... (will be pinned to IPFS)"
-              value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)}
-            />
+            <label>Token Image</label>
+            <ImageUploader value={form.imageUrl} onChange={(url) => set('imageUrl', url)} />
           </div>
 
           <div className="card">
@@ -198,7 +195,75 @@ export default function LaunchTab() {
   );
 }
 
-function WalletStatus({ wallet }) {
+function ImageUploader({ value, onChange }) {
+  const [dragging, setDragging] = useState(false);
+  const [preview, setPreview] = useState(value || null);
+  const inputRef = React.useRef();
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreview(e.target.result);
+      onChange(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    handleFile(e.dataTransfer.files[0]);
+  }
+
+  function handleUrlInput(e) {
+    setPreview(e.target.value);
+    onChange(e.target.value);
+  }
+
+  return (
+    <div>
+      <div
+        className={`img-drop-zone${dragging ? ' dragging' : ''}`}
+        onClick={() => inputRef.current.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => handleFile(e.target.files[0])}
+        />
+        {preview ? (
+          <div className="img-preview-wrap">
+            <img src={preview} alt="preview" className="img-preview" />
+            <span className="img-change">Click to change</span>
+          </div>
+        ) : (
+          <div className="img-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>Drop image or click to upload</span>
+            <span className="img-sub">PNG, JPG, GIF up to 5MB</span>
+          </div>
+        )}
+      </div>
+      <input
+        type="text"
+        placeholder="Or paste image URL..."
+        value={typeof value === 'string' && value.startsWith('http') ? value : ''}
+        onChange={handleUrlInput}
+        style={{ marginTop: 8 }}
+      />
+    </div>
+  );
+}
   if (!wallet.publicKey) {
     return (
       <div className="wallet-box">

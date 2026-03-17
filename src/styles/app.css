@@ -446,3 +446,73 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
   transition: background 0.2s;
 }
 .tab-btn.active .tab-dot { background: var(--accent2); }
+
+/* ─── Logo (SVG mark + wordmark) ─────────────────────────────────────── */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+
+/* ─── Updated color scheme — lighter, more visible ───────────────────── */
+:root {
+  --bg:      #0d1117;
+  --bg2:     #161b27;
+  --bg3:     #1e2535;
+  --surface: #161b27;
+  --surface2:#1e2535;
+  --border:  rgba(255,255,255,0.09);
+  --border2: rgba(255,255,255,0.16);
+  --accent:  #5a55f4;
+  --accent2: #818cf8;
+  --text:    #f0f4ff;
+  --text2:   #9aa5be;
+  --text3:   #5a6580;
+}
+
+/* ─── Image uploader ──────────────────────────────────────────────────── */
+.img-drop-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+  background: var(--bg2);
+}
+.img-drop-zone:hover,
+.img-drop-zone.dragging {
+  border-color: var(--accent2);
+  background: rgba(99,102,241,0.06);
+}
+.img-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text3);
+  font-size: 0.85rem;
+}
+.img-placeholder svg { opacity: 0.5; }
+.img-sub { font-size: 0.72rem; color: var(--text3); opacity: 0.7; }
+.img-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.img-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--border2);
+}
+.img-change { font-size: 0.72rem; color: var(--accent2); }

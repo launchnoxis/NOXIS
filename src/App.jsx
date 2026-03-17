@@ -42,7 +42,16 @@ function AppInner() {
       {/* Header */}
       <header className="app-header">
         <div className="header-left">
-          <div className="logo">NOX<span>IS</span></div>
+          <div className="logo">
+            <svg width="28" height="28" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+              <path d="M6 34 L6 6 L34 34 L34 6" fill="none" stroke="#818cf8" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="6"  cy="6"  r="3" fill="#818cf8"/>
+              <circle cx="34" cy="6"  r="3" fill="#818cf8"/>
+              <circle cx="6"  cy="34" r="3" fill="#6366f1"/>
+              <circle cx="34" cy="34" r="3" fill="#6366f1"/>
+            </svg>
+            <span className="logo-text">OXIS</span>
+          </div>
           <div className="tagline">Solana Token Launcher · Anti-Rug Suite · Private Access</div>
         </div>
         <div className="header-right">
