@@ -7,6 +7,7 @@ import LaunchTab from './components/LaunchTab';
 import AntiRugTab from './components/AntiRugTab';
 import BoostTab from './components/BoostTab';
 import DashboardTab from './components/DashboardTab';
+import DocsPage from './components/DocsPage';
 import './styles/app.css';
 
 const TABS = [
@@ -32,7 +33,7 @@ const NLogo = ({ size = 32, light = false }) => (
   </svg>
 );
 
-function LandingPage({ onLaunch }) {
+function LandingPage({ onLaunch, onDocs }) {
   return (
     <div className="landing">
 
@@ -45,6 +46,7 @@ function LandingPage({ onLaunch }) {
         <div className="land-nav-links">
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
+          <button className="land-nav-docs" onClick={onDocs}>Docs</button>
         </div>
         <button className="btn-launch-app" onClick={onLaunch}>Launch App →</button>
       </nav>
@@ -64,7 +66,7 @@ function LandingPage({ onLaunch }) {
         </p>
         <div className="land-hero-btns">
           <button className="btn-primary-land" onClick={onLaunch}>Launch Your Token →</button>
-          <a href="#how" className="btn-ghost-land">See how it works</a>
+          <button className="btn-ghost-land" onClick={onDocs}>Read Documentation</button>
         </div>
 
         {/* Stats */}
@@ -214,8 +216,12 @@ function AppInner() {
       .catch(() => {});
   }, [wallet.publicKey]);
 
+  if (view === 'docs') {
+    return <DocsPage onBack={() => setView('landing')} />;
+  }
+
   if (view === 'landing') {
-    return <LandingPage onLaunch={() => setView('app')} />;
+    return <LandingPage onLaunch={() => setView('app')} onDocs={() => setView('docs')} />;
   }
 
   return (
