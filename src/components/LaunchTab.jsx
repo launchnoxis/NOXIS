@@ -116,7 +116,12 @@ export default function LaunchTab() {
           <div className="card mb">
             <div className="card-title">Token Preview</div>
             <div className="token-preview">
-              <div className="token-img">{form.imageUrl ? '' : ''}</div>
+              <div className="token-img">
+                {form.imageUrl
+                  ? <img src={form.imageUrl} alt="token" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:10}} />
+                  : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.3}}><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                }
+              </div>
               <div>
                 <div className="token-name">{form.name || 'My Token'}</div>
                 <div className="token-sym">${form.symbol || 'TOKEN'}</div>
