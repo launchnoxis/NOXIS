@@ -54,42 +54,32 @@ export function useSolanaWallet() {
       throw new Error('Wallet not connected');
     }
 
-    const { Transaction, Keypair } = await import('@solana/web3.js');
+    const { VersionedTransaction, Keypair } = await import('@solana/web3.js');
 
-    // Get fresh blockhash FIRST before doing anything
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
-
-    // Deserialize
+    // PumpPortal returns a VersionedTransaction
     const txBuffer = Buffer.from(base64Tx, 'base64');
-    const tx = Transaction.from(txBuffer);
+    const tx = VersionedTransaction.deserialize(txBuffer);
 
-    // Apply fresh blockhash
-    tx.recentBlockhash = blockhash;
-    tx.feePayer = wallet.publicKey;
-
-    // Clear all existing signatures since we changed the blockhash
-    tx.signatures = [];
-
-    // Re-sign with mint keypair
+    // Sign with mint keypair first
     if (mintKeypairBytes) {
       const mintKp = Keypair.fromSecretKey(Uint8Array.from(mintKeypairBytes));
-      tx.partialSign(mintKp);
+      tx.sign([mintKp]);
     }
 
     // Sign with user wallet
     const signedTx = await wallet.signTransaction(tx);
-    const serialized = signedTx.serialize({ requireAllSignatures: false });
 
-    // Send with skipPreflight to bypass simulation
-    const signature = await connection.sendRawTransaction(serialized, {
+    // Send skipPreflight — let Solana validate on-chain directly
+    const signature = await connection.sendRawTransaction(signedTx.serialize(), {
       skipPreflight: true,
       maxRetries: 5,
     });
 
     // Confirm
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
     await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
 
-    return { signature, serialized: Buffer.from(serialized).toString('base64') };
+    return { signature };
   }
 
   /**
