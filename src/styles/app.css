@@ -396,3 +396,53 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
   .tab-btn { padding: 10px 14px; }
   .logo { font-size: 1.2rem; }
 }
+
+/* ─── Page hero ───────────────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 1rem;
+  padding: 4px 12px;
+  background: rgba(99,102,241,0.1);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 20px;
+}
+.hero-title {
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+.hero-highlight {
+  color: var(--accent2);
+  text-shadow: 0 0 40px rgba(99,102,241,0.5), 0 0 80px rgba(99,102,241,0.2);
+}
+.hero-sub {
+  font-size: 1rem;
+  color: var(--text2);
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+/* ─── Tab icon dots (no emoji) ────────────────────────────────────────── */
+.tab-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+  display: inline-block;
+  transition: background 0.2s;
+}
+.tab-btn.active .tab-dot { background: var(--accent2); }

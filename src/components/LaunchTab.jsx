@@ -66,6 +66,11 @@ export default function LaunchTab() {
 
   return (
     <div className="tab-content">
+      <div className="page-hero">
+        <div className="hero-label">Solana · pump.fun</div>
+        <h1 className="hero-title">Launch your token.<br/><span className="hero-highlight">In one click.</span></h1>
+        <p className="hero-sub">Fill in your token details, connect your wallet, and deploy directly to pump.fun with anti-rug protection built in.</p>
+      </div>
       <div className="grid2">
         {/* Left column */}
         <div>
@@ -114,7 +119,7 @@ export default function LaunchTab() {
           <div className="card mb">
             <div className="card-title">Token Preview</div>
             <div className="token-preview">
-              <div className="token-img">{form.imageUrl ? '🖼' : '🪙'}</div>
+              <div className="token-img">{form.imageUrl ? '' : ''}</div>
               <div>
                 <div className="token-name">{form.name || 'My Token'}</div>
                 <div className="token-sym">${form.symbol || 'TOKEN'}</div>

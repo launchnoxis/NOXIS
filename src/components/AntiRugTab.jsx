@@ -46,6 +46,11 @@ export default function AntiRugTab() {
 
   return (
     <div className="tab-content">
+      <div className="page-hero">
+        <div className="hero-label">Protection Layer</div>
+        <h1 className="hero-title">Your token,<br/><span className="hero-highlight">Rug-proof.</span></h1>
+        <p className="hero-sub">Lock liquidity, vest dev tokens, and renounce mint authority — all configured before launch so buyers can verify everything on-chain.</p>
+      </div>
       <div className="grid2 mb">
         {/* LP Lock */}
         <div className="card">

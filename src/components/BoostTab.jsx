@@ -80,6 +80,11 @@ export default function BoostTab() {
 
   return (
     <div className="tab-content">
+      <div className="page-hero">
+        <div className="hero-label">Growth Engine</div>
+        <h1 className="hero-title">Keep your coin<br/><span className="hero-highlight">alive.</span></h1>
+        <p className="hero-sub">Drive organic-looking volume, grow your holder count, and push to the trending page — all automated.</p>
+      </div>
 
       {/* Volume Engine */}
       <div className="card mb">

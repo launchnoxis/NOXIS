@@ -10,10 +10,10 @@ import DashboardTab from './components/DashboardTab';
 import './styles/app.css';
 
 const TABS = [
-  { id: 'launch', label: 'Launch Token', icon: '🚀' },
-  { id: 'antirug', label: 'Anti-Rug', icon: '🔒' },
-  { id: 'boost', label: 'Boost Engine', icon: '📈' },
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { id: 'launch',    label: 'Launch Token' },
+  { id: 'antirug',  label: 'Anti-Rug' },
+  { id: 'boost',    label: 'Boost Engine' },
+  { id: 'dashboard',label: 'Dashboard' },
 ];
 
 function AppInner() {
@@ -64,7 +64,7 @@ function AppInner() {
             className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
             onClick={() => setActiveTab(t.id)}
           >
-            <span className="tab-icon">{t.icon}</span>
+            <span className="tab-dot"></span>
             <span className="tab-label">{t.label}</span>
           </button>
         ))}
