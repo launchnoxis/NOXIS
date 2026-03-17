@@ -264,6 +264,8 @@ function ImageUploader({ value, onChange }) {
     </div>
   );
 }
+
+function WalletStatus({ wallet }) {
   if (!wallet.publicKey) {
     return (
       <div className="wallet-box">
