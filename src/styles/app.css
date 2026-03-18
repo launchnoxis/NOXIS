@@ -926,3 +926,22 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
   .feat-row-1 { grid-template-columns: 1fr; }
   .feat-row-2 { grid-template-columns: 1fr; }
 }
+
+/* ─── X / Twitter link ────────────────────────────────────────────────────── */
+.x-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  text-decoration: none;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.x-link:hover {
+  border-color: var(--border2);
+  color: var(--text);
+  background: var(--white08);
+}
