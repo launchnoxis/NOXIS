@@ -48,7 +48,12 @@ function LandingPage({ onLaunch, onDocs }) {
           <a href="#how">How it works</a>
           <button className="land-nav-docs" onClick={onDocs}>Docs</button>
         </div>
-        <button className="btn-launch-app" onClick={onLaunch}>Launch App →</button>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <a href="https://x.com/LaunchNoxis" target="_blank" rel="noreferrer" className="x-link" aria-label="X / Twitter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <button className="btn-launch-app" onClick={onLaunch}>Launch App →</button>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -257,6 +262,9 @@ function AppInner() {
           <div className="tagline">Solana Token Launcher · Anti-Rug Suite · Private Access</div>
         </div>
         <div className="header-right">
+          <a href="https://x.com/LaunchNoxis" target="_blank" rel="noreferrer" className="x-link" aria-label="X / Twitter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
           {wallet.publicKey && balance !== null && (
             <div className="sol-badge">
               <span className="sol-dot" />
