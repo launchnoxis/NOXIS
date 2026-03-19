@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSolanaWallet } from '../lib/wallet';
 import { buildLaunchTx, submitSignedTx } from '../lib/api';
+import NoxisLoader from './NoxisLoader';
 
 export default function LaunchTab() {
   const wallet = useSolanaWallet();
@@ -51,6 +52,7 @@ export default function LaunchTab() {
 
   return (
     <div className="tab-content">
+      <NoxisLoader visible={launching} message={step || 'Launching token...'} />
       <div className="page-hero">
         <div className="hero-label">Solana · pump.fun</div>
         <h1 className="hero-title">Launch your token.<br/><span className="hero-highlight">In one click.</span></h1>
