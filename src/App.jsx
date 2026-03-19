@@ -8,6 +8,7 @@ import AntiRugTab from './components/AntiRugTab';
 import BoostTab from './components/BoostTab';
 import DashboardTab from './components/DashboardTab';
 import DocsPage from './components/DocsPage';
+import VerifyTab from './components/VerifyTab';
 import './styles/app.css';
 
 const PASSWORD = 'Bundle123';
@@ -82,6 +83,7 @@ const TABS = [
   { id: 'antirug',  label: 'Anti-Rug' },
   { id: 'boost',    label: 'Boost Engine' },
   { id: 'dashboard',label: 'Dashboard' },
+  { id: 'verify',   label: 'Verify' },
 ];
 
 const NLogo = ({ size = 32, light = false }) => (
@@ -360,6 +362,7 @@ function AppInner() {
         {activeTab === 'antirug'   && <AntiRugTab />}
         {activeTab === 'boost'     && <BoostTab />}
         {activeTab === 'dashboard' && <DashboardTab />}
+        {activeTab === 'verify'    && <VerifyTab />}
       </main>
     </div>
   );
