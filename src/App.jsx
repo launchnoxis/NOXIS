@@ -10,6 +10,73 @@ import DashboardTab from './components/DashboardTab';
 import DocsPage from './components/DocsPage';
 import './styles/app.css';
 
+const PASSWORD = 'Bundle123';
+
+function PasswordGate({ onUnlock }) {
+  const [input, setInput] = useState('');
+  const [error, setError] = useState(false);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (input === PASSWORD) {
+      localStorage.setItem('noxis_auth', '1');
+      onUnlock();
+    } else {
+      setError(true);
+      setInput('');
+      setTimeout(() => setError(false), 2000);
+    }
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#0a0d16', fontFamily: 'Inter, sans-serif',
+    }}>
+      <div style={{
+        background: '#161b27', border: '1px solid rgba(99,102,241,0.2)',
+        borderRadius: 16, padding: '48px 40px', width: 360, textAlign: 'center',
+      }}>
+        <svg width="40" height="40" viewBox="0 0 40 40" style={{marginBottom: 20}} xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#a5b4fc"/><stop offset="100%" stopColor="#6366f1"/></linearGradient></defs>
+          <path d="M6 34 L6 6 L34 34 L34 6" fill="none" stroke="url(#pg)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="6" cy="6" r="3" fill="#a5b4fc"/>
+          <circle cx="34" cy="6" r="3" fill="#a5b4fc"/>
+          <circle cx="6" cy="34" r="3" fill="#6366f1"/>
+          <circle cx="34" cy="34" r="3" fill="#6366f1"/>
+        </svg>
+        <div style={{fontSize: 22, fontWeight: 700, color: '#f0f4ff', marginBottom: 8}}>Noxis</div>
+        <div style={{fontSize: 13, color: 'rgba(240,244,255,0.4)', marginBottom: 32}}>Private access only</div>
+        <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 12}}>
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            autoFocus
+            style={{
+              padding: '12px 16px', background: '#0a0d16',
+              border: `1px solid ${error ? '#ef4444' : 'rgba(99,102,241,0.25)'}`,
+              borderRadius: 10, color: '#f0f4ff', fontSize: 14,
+              outline: 'none', fontFamily: 'Inter, sans-serif',
+              transition: 'border-color 0.2s',
+            }}
+          />
+          {error && <div style={{fontSize: 12, color: '#ef4444'}}>Incorrect password</div>}
+          <button type="submit" style={{
+            padding: '12px', background: '#6366f1', border: 'none',
+            borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+          }}>
+            Enter →
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
 const TABS = [
   { id: 'launch',    label: 'Launch Token' },
   { id: 'antirug',  label: 'Anti-Rug' },
@@ -299,6 +366,10 @@ function AppInner() {
 }
 
 export default function App() {
+  const [unlocked, setUnlocked] = useState(() => localStorage.getItem('noxis_auth') === '1');
+
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+
   return (
     <SolanaWalletProvider>
       <AppInner />
