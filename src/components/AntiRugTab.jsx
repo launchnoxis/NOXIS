@@ -118,10 +118,10 @@ export default function AntiRugTab() {
           <span style={{ fontSize: 20 }}>⏳</span>
           <div>
             <div style={{ fontWeight: 600, color: '#f59e0b', fontSize: 14, marginBottom: 6 }}>
-              Available after graduation to Raydium
+              Available after graduation to Pump.fun Swap
             </div>
             <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
-              pump.fun tokens run on a bonding curve — there is no LP pool to lock until the token graduates (~85 SOL raised) and moves to Raydium. Once graduated, LP tokens can be locked via Streamflow or burned permanently. A one-click lock button will appear here once graduation is detected.
+              pump.fun tokens run on a bonding curve — there is no LP pool to lock until the token graduates (~85 SOL raised) and moves to Pump.fun Swap. Once graduated, LP tokens can be locked via Streamflow or burned permanently. A one-click lock button will appear here once graduation is detected.
             </div>
           </div>
         </div>
