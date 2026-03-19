@@ -9,6 +9,7 @@ import BoostTab from './components/BoostTab';
 import DashboardTab from './components/DashboardTab';
 import DocsPage from './components/DocsPage';
 import VerifyTab from './components/VerifyTab';
+import NoxisLoader from './components/NoxisLoader';
 import './styles/app.css';
 
 const PASSWORD = 'Bundle123';
@@ -293,8 +294,17 @@ function LandingPage({ onLaunch, onDocs }) {
 function AppInner() {
   const [view, setView] = useState('landing');
   const [activeTab, setActiveTab] = useState('launch');
+  const [transitioning, setTransitioning] = useState(false);
   const wallet = useSolanaWallet();
   const [balance, setBalance] = useState(null);
+
+  function handleLaunch() {
+    setTransitioning(true);
+    setTimeout(() => {
+      setView('app');
+      setTransitioning(false);
+    }, 1800);
+  }
 
   useEffect(() => {
     if (!wallet.publicKey) { setBalance(null); return; }
@@ -308,7 +318,12 @@ function AppInner() {
   }
 
   if (view === 'landing') {
-    return <LandingPage onLaunch={() => setView('app')} onDocs={() => setView('docs')} />;
+    return (
+      <>
+        <NoxisLoader visible={transitioning} message="Loading the app..." />
+        <LandingPage onLaunch={handleLaunch} onDocs={() => setView('docs')} />
+      </>
+    );
   }
 
   return (
