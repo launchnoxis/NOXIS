@@ -132,8 +132,8 @@ function LandingPage({ onLaunch, onDocs }) {
           <span className="badge-dot" /> Private Access · Solana
         </div>
         <h1 className="land-hero-title">
-          The fastest way to<br/>
-          <span className="land-hero-glow">launch on pump.fun.</span>
+          Anti-rug infrastructure for<br/>
+          <span className="land-hero-glow">pump.fun tokens.</span>
         </h1>
         <p className="land-hero-sub">
           One-click token deployment with built-in anti-rug protection,<br/>
