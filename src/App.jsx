@@ -300,10 +300,14 @@ function AppInner() {
 
   function handleLaunch() {
     setTransitioning(true);
-    setTimeout(() => {
-      setView('app');
-      setTransitioning(false);
-    }, 1800);
+    setTimeout(() => setView('app'), 1800);
+    setTimeout(() => setTransitioning(false), 2100);
+  }
+
+  function handleDocs() {
+    setTransitioning(true);
+    setTimeout(() => setView('docs'), 1800);
+    setTimeout(() => setTransitioning(false), 2100);
   }
 
   useEffect(() => {
@@ -313,73 +317,74 @@ function AppInner() {
       .catch(() => {});
   }, [wallet.publicKey]);
 
-  if (view === 'docs') {
-    return <DocsPage onBack={() => setView('landing')} />;
-  }
-
-  if (view === 'landing') {
-    return (
-      <>
-        <NoxisLoader visible={transitioning} message="Loading the app..." />
-        <LandingPage onLaunch={handleLaunch} onDocs={() => setView('docs')} />
-      </>
-    );
-  }
-
   return (
-    <div className="app-shell">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: { background: '#161b27', color: '#f0f4ff', border: '1px solid rgba(99,102,241,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem' },
-          success: { iconTheme: { primary: '#10b981', secondary: '#161b27' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#161b27' } },
-        }}
-      />
+    <>
+      <NoxisLoader visible={transitioning} message={view === 'landing' ? 'Loading...' : 'Loading docs...'} />
 
-      <header className="app-header">
-        <div className="header-left">
-          <button className="logo" onClick={() => setView('landing')} style={{background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:10,padding:0}}>
-            <NLogo size={28} />
-            <span className="logo-text">Noxis</span>
-          </button>
-          <div className="tagline">Solana Token Launcher · Anti-Rug Suite · Private Access</div>
-        </div>
-        <div className="header-right">
-          <a href="https://x.com/LaunchNoxis" target="_blank" rel="noreferrer" className="x-link" aria-label="X / Twitter">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          </a>
-          {wallet.publicKey && balance !== null && (
-            <div className="sol-badge">
-              <span className="sol-dot" />
-              {balance.toFixed(3)} SOL
+      {view === 'docs' && (
+        <DocsPage onBack={() => setView('landing')} />
+      )}
+
+      {view === 'landing' && (
+        <LandingPage onLaunch={handleLaunch} onDocs={handleDocs} />
+      )}
+
+      {view === 'app' && (
+        <div className="app-shell">
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: { background: '#161b27', color: '#f0f4ff', border: '1px solid rgba(99,102,241,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem' },
+              success: { iconTheme: { primary: '#10b981', secondary: '#161b27' } },
+              error: { iconTheme: { primary: '#ef4444', secondary: '#161b27' } },
+            }}
+          />
+
+          <header className="app-header">
+            <div className="header-left">
+              <button className="logo" onClick={() => setView('landing')} style={{background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:10,padding:0}}>
+                <NLogo size={28} />
+                <span className="logo-text">Noxis</span>
+              </button>
+              <div className="tagline">Solana Token Launcher · Anti-Rug Suite · Private Access</div>
             </div>
-          )}
-          <WalletMultiButton />
+            <div className="header-right">
+              <a href="https://x.com/LaunchNoxis" target="_blank" rel="noreferrer" className="x-link" aria-label="X / Twitter">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
+              {wallet.publicKey && balance !== null && (
+                <div className="sol-badge">
+                  <span className="sol-dot" />
+                  {balance.toFixed(3)} SOL
+                </div>
+              )}
+              <WalletMultiButton />
+            </div>
+          </header>
+
+          <nav className="tab-nav">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(t.id)}
+              >
+                <span className="tab-dot"></span>
+                <span className="tab-label">{t.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          <main className="app-main">
+            {activeTab === 'launch'    && <LaunchTab />}
+            {activeTab === 'antirug'   && <AntiRugTab />}
+            {activeTab === 'boost'     && <BoostTab />}
+            {activeTab === 'dashboard' && <DashboardTab />}
+            {activeTab === 'verify'    && <VerifyTab />}
+          </main>
         </div>
-      </header>
-
-      <nav className="tab-nav">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            <span className="tab-dot"></span>
-            <span className="tab-label">{t.label}</span>
-          </button>
-        ))}
-      </nav>
-
-      <main className="app-main">
-        {activeTab === 'launch'    && <LaunchTab />}
-        {activeTab === 'antirug'   && <AntiRugTab />}
-        {activeTab === 'boost'     && <BoostTab />}
-        {activeTab === 'dashboard' && <DashboardTab />}
-        {activeTab === 'verify'    && <VerifyTab />}
-      </main>
-    </div>
+      )}
+    </>
   );
 }
 
