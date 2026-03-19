@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSolanaWallet } from '../lib/wallet';
-import { startVolumeJob, stopVolumeJob, getVolumeJobStatus, listVolumeJobs, buildBoostBuy } from '../lib/api';
+import { startVolumeJob, stopVolumeJob, getVolumeJobStatus, buildBoostBuy } from '../lib/api';
 
 export default function BoostTab() {
   const wallet = useSolanaWallet();
@@ -14,14 +14,11 @@ export default function BoostTab() {
   });
   const [activeJob, setActiveJob] = useState(null);
   const [jobLoading, setJobLoading] = useState(false);
-  const [holderSettings, setHolderSettings] = useState({ enabled: false, targetHolders: 500 });
-  const [commentSettings, setCommentSettings] = useState({ enabled: false, postsPerHour: 4, style: 'Organic Retail' });
-  const [trendingSettings, setTrendingSettings] = useState({ enabled: false, targetSlot: 'Top 25' });
   const [singleBuy, setSingleBuy] = useState({ mintAddress: '', solAmount: 0.1 });
+  const [buyLoading, setBuyLoading] = useState(false);
 
   const setVol = (k, v) => setVolumeSettings(s => ({ ...s, [k]: v }));
 
-  // Poll job status every 5s if active
   useEffect(() => {
     if (!activeJob?.jobId) return;
     const interval = setInterval(async () => {
@@ -65,6 +62,7 @@ export default function BoostTab() {
   async function handleManualBuy() {
     if (!wallet.publicKey) return toast.error('Connect wallet first');
     if (!singleBuy.mintAddress) return toast.error('Enter a mint address');
+    setBuyLoading(true);
     try {
       const res = await buildBoostBuy({
         buyerWallet: wallet.publicKey.toBase58(),
@@ -75,23 +73,34 @@ export default function BoostTab() {
       toast.success(`Buy sent: ${signature.slice(0, 12)}...`);
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setBuyLoading(false);
     }
   }
 
   return (
     <div className="tab-content">
       <div className="page-hero">
-        <div className="hero-label">Growth Engine</div>
+        <div className="hero-label">Boost Engine</div>
         <h1 className="hero-title">Keep your coin<br/><span className="hero-highlight">alive.</span></h1>
-        <p className="hero-sub">Drive organic-looking volume, grow your holder count, and push to the trending page — all automated.</p>
+        <p className="hero-sub">Schedule automated volume cycles or execute manual buys to maintain chart activity.</p>
       </div>
 
       {/* Volume Engine */}
       <div className="card mb">
         <div className="card-title">Volume Engine</div>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
+          Schedules recurring buy/sell cycles on your token. Requires funded sub-wallets configured on the backend to execute real transactions.
+        </p>
+
         <label>Token Mint Address</label>
-        <input type="text" placeholder="Token mint address..." value={volumeSettings.mintAddress}
-          onChange={e => setVol('mintAddress', e.target.value)} />
+        <input
+          type="text"
+          placeholder="Token mint address..."
+          value={volumeSettings.mintAddress}
+          onChange={e => setVol('mintAddress', e.target.value)}
+          style={{ fontFamily: 'monospace', fontSize: 12 }}
+        />
 
         <label>Daily Volume Target (SOL)</label>
         <div className="range-wrap">
@@ -125,7 +134,7 @@ export default function BoostTab() {
                 </span>
               </div>
               <div className="job-stat">
-                <span className="js-label">Trades</span>
+                <span className="js-label">Cycles</span>
                 <span className="js-val">{activeJob.tradesExecuted}</span>
               </div>
               <div className="job-stat">
@@ -146,125 +155,63 @@ export default function BoostTab() {
             )}
           </div>
         ) : (
-          <button className="btn btn-primary" onClick={handleStartJob} disabled={jobLoading}>
+          <button
+            className="btn btn-primary"
+            onClick={handleStartJob}
+            disabled={jobLoading || !wallet.publicKey}
+          >
             {jobLoading ? 'Starting...' : '▶ Start Volume Engine'}
           </button>
         )}
-      </div>
 
-      <div className="grid2 mb">
-        {/* Holder Growth */}
-        <div className="card">
-          <div className="card-title">Holder Growth</div>
-          <div className="toggle-row">
-            <div>
-              <div className="toggle-label">Auto Distribute</div>
-              <div className="toggle-desc">Spread tokens to grow holder count</div>
-            </div>
-            <label className="toggle">
-              <input type="checkbox" checked={holderSettings.enabled}
-                onChange={() => setHolderSettings(s => ({ ...s, enabled: !s.enabled }))} />
-              <span className="slider" />
-            </label>
-          </div>
-          {holderSettings.enabled && (
-            <>
-              <label>Target Holders</label>
-              <input type="number" value={holderSettings.targetHolders} min={10}
-                onChange={e => setHolderSettings(s => ({ ...s, targetHolders: parseInt(e.target.value) }))} />
-              <div className="alert alert-warn" style={{ marginTop: 10 }}>
-                Requires funded sub-wallets configured on backend.
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Comment Seeding */}
-        <div className="card">
-          <div className="card-title">Comment Seeding</div>
-          <div className="toggle-row">
-            <div>
-              <div className="toggle-label">Auto Hype Comments</div>
-              <div className="toggle-desc">Post bullish comments on pump.fun page</div>
-            </div>
-            <label className="toggle">
-              <input type="checkbox" checked={commentSettings.enabled}
-                onChange={() => setCommentSettings(s => ({ ...s, enabled: !s.enabled }))} />
-              <span className="slider" />
-            </label>
-          </div>
-          {commentSettings.enabled && (
-            <>
-              <label>Comment Style</label>
-              <select value={commentSettings.style}
-                onChange={e => setCommentSettings(s => ({ ...s, style: e.target.value }))}>
-                <option>Organic Retail</option>
-                <option>Degen Culture</option>
-                <option>Professional</option>
-              </select>
-              <label>Posts per Hour</label>
-              <input type="number" value={commentSettings.postsPerHour} min={1} max={20}
-                onChange={e => setCommentSettings(s => ({ ...s, postsPerHour: parseInt(e.target.value) }))} />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Trending Booster */}
-      <div className="card mb">
-        <div className="card-title">Trending Booster</div>
-        <div className="toggle-row">
-          <div>
-            <div className="toggle-label">Trending Page Push</div>
-            <div className="toggle-desc">Coordinate buys to reach pump.fun trending at a target time</div>
-          </div>
-          <label className="toggle">
-            <input type="checkbox" checked={trendingSettings.enabled}
-              onChange={() => setTrendingSettings(s => ({ ...s, enabled: !s.enabled }))} />
-            <span className="slider" />
-          </label>
-        </div>
-        {trendingSettings.enabled && (
-          <div className="grid2" style={{ marginTop: 10, gap: '0.75rem' }}>
-            <div>
-              <label>Target Slot</label>
-              <select value={trendingSettings.targetSlot}
-                onChange={e => setTrendingSettings(s => ({ ...s, targetSlot: e.target.value }))}>
-                <option>Top 10</option>
-                <option>Top 25</option>
-                <option>Top 50</option>
-              </select>
-            </div>
-            <div>
-              <label>Push Window</label>
-              <select>
-                <option>2 hours post-launch</option>
-                <option>6 hours post-launch</option>
-                <option>Custom time</option>
-              </select>
-            </div>
+        {!wallet.publicKey && (
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, textAlign: 'center' }}>
+            Connect wallet to start volume engine
           </div>
         )}
       </div>
 
-      {/* Manual single buy */}
+      {/* Manual Buy */}
       <div className="card">
         <div className="card-title">Manual Buy</div>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
+          Execute a single buy transaction directly from your connected wallet on any pump.fun token.
+        </p>
         <div className="grid2" style={{ gap: '0.75rem' }}>
           <div>
             <label>Mint Address</label>
-            <input type="text" placeholder="Token mint..." value={singleBuy.mintAddress}
-              onChange={e => setSingleBuy(s => ({ ...s, mintAddress: e.target.value }))} />
+            <input
+              type="text"
+              placeholder="Token mint..."
+              value={singleBuy.mintAddress}
+              onChange={e => setSingleBuy(s => ({ ...s, mintAddress: e.target.value }))}
+              style={{ fontFamily: 'monospace', fontSize: 12 }}
+            />
           </div>
           <div>
             <label>Amount (SOL)</label>
-            <input type="number" step="0.01" min="0.001" value={singleBuy.solAmount}
-              onChange={e => setSingleBuy(s => ({ ...s, solAmount: parseFloat(e.target.value) }))} />
+            <input
+              type="number"
+              step="0.01"
+              min="0.001"
+              value={singleBuy.solAmount}
+              onChange={e => setSingleBuy(s => ({ ...s, solAmount: parseFloat(e.target.value) }))}
+            />
           </div>
         </div>
-        <button className="btn btn-outline" style={{ marginTop: 10 }} onClick={handleManualBuy}>
-          Execute Buy →
+        <button
+          className="btn btn-outline"
+          style={{ marginTop: 12 }}
+          onClick={handleManualBuy}
+          disabled={buyLoading || !wallet.publicKey}
+        >
+          {buyLoading ? 'Sending...' : 'Execute Buy →'}
         </button>
+        {!wallet.publicKey && (
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, textAlign: 'center' }}>
+            Connect wallet to execute buy
+          </div>
+        )}
       </div>
     </div>
   );
