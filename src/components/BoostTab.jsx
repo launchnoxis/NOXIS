@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSolanaWallet } from '../lib/wallet';
-import { startVolumeJob, stopVolumeJob, getVolumeJobStatus, buildBoostBuy } from '../lib/api';
+import { startVolumeJob, stopVolumeJob, getVolumeJobStatus } from '../lib/api';
+
+const BACKEND = 'https://noxis-backend-production.up.railway.app';
 
 export default function BoostTab() {
   const wallet = useSolanaWallet();
 
+  const [subWallets, setSubWallets] = useState([]);
   const [volumeSettings, setVolumeSettings] = useState({
     mintAddress: '',
-    dailySolTarget: 20,
-    frequencyMinutes: 2,
-    maxTradeSol: 0.3,
+    dailySolTarget: 5,
+    frequencyMinutes: 5,
+    maxTradeSol: 0.1,
   });
   const [activeJob, setActiveJob] = useState(null);
   const [jobLoading, setJobLoading] = useState(false);
-  const [singleBuy, setSingleBuy] = useState({ mintAddress: '', solAmount: 0.1 });
-  const [buyLoading, setBuyLoading] = useState(false);
+  const [copied, setCopied] = useState(null);
 
   const setVol = (k, v) => setVolumeSettings(s => ({ ...s, [k]: v }));
 
+  // Load sub-wallet addresses on mount
+  useEffect(() => {
+    fetch(`${BACKEND}/api/boost/wallets`)
+      .then(r => r.json())
+      .then(d => setSubWallets(d.wallets || []))
+      .catch(() => {});
+  }, []);
+
+  // Poll job status every 5s
   useEffect(() => {
     if (!activeJob?.jobId) return;
     const interval = setInterval(async () => {
@@ -29,6 +40,12 @@ export default function BoostTab() {
     }, 5000);
     return () => clearInterval(interval);
   }, [activeJob?.jobId]);
+
+  function copyAddress(addr, idx) {
+    navigator.clipboard.writeText(addr);
+    setCopied(idx);
+    setTimeout(() => setCopied(null), 2000);
+  }
 
   async function handleStartJob() {
     if (!wallet.publicKey) return toast.error('Connect wallet first');
@@ -59,39 +76,65 @@ export default function BoostTab() {
     }
   }
 
-  async function handleManualBuy() {
-    if (!wallet.publicKey) return toast.error('Connect wallet first');
-    if (!singleBuy.mintAddress) return toast.error('Enter a mint address');
-    setBuyLoading(true);
-    try {
-      const res = await buildBoostBuy({
-        buyerWallet: wallet.publicKey.toBase58(),
-        mintAddress: singleBuy.mintAddress,
-        solAmount: singleBuy.solAmount,
-      });
-      const { signature } = await wallet.signAndSendTransaction(res.transaction);
-      toast.success(`Buy sent: ${signature.slice(0, 12)}...`);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setBuyLoading(false);
-    }
-  }
+  const totalSolNeeded = ((24 * 60) / volumeSettings.frequencyMinutes * volumeSettings.maxTradeSol).toFixed(2);
 
   return (
     <div className="tab-content">
       <div className="page-hero">
         <div className="hero-label">Boost Engine</div>
         <h1 className="hero-title">Keep your coin<br/><span className="hero-highlight">alive.</span></h1>
-        <p className="hero-sub">Schedule automated volume cycles or execute manual buys to maintain chart activity.</p>
+        <p className="hero-sub">Automated buy/sell cycles to maintain chart activity. Fund the sub-wallets below then start a job.</p>
       </div>
 
-      {/* Volume Engine */}
+      {/* Step 1 — Fund sub-wallets */}
       <div className="card mb">
-        <div className="card-title">Volume Engine</div>
+        <div className="card-title">Step 1 — Fund Sub-Wallets</div>
         <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
-          Schedules recurring buy/sell cycles on your token. Requires funded sub-wallets configured on the backend to execute real transactions.
+          Send SOL to one or more of these wallets. The boost engine uses them to execute real buy/sell cycles on-chain. Recommended: at least <strong style={{ color: 'var(--text)' }}>0.5 SOL</strong> per wallet.
         </p>
+
+        {subWallets.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--muted)' }}>Loading wallet addresses...</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {subWallets.map((w, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 10, padding: '10px 14px', gap: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{
+                    background: 'rgba(99,102,241,0.15)', color: '#818cf8',
+                    borderRadius: 6, padding: '2px 8px',
+                    fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
+                  }}>W{w.index}</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--muted)' }}>
+                    {w.pubKey.slice(0, 12)}...{w.pubKey.slice(-12)}
+                  </span>
+                </div>
+                <button
+                  onClick={() => copyAddress(w.pubKey, i)}
+                  style={{
+                    background: copied === i ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 6, padding: '4px 12px',
+                    fontSize: 11, color: copied === i ? '#22c55e' : 'var(--muted)',
+                    cursor: 'pointer', fontFamily: 'monospace', transition: 'all 0.15s',
+                  }}
+                >
+                  {copied === i ? '✓ Copied' : 'Copy'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Step 2 — Configure & Start */}
+      <div className="card mb">
+        <div className="card-title">Step 2 — Configure & Start</div>
 
         <label>Token Mint Address</label>
         <input
@@ -104,7 +147,7 @@ export default function BoostTab() {
 
         <label>Daily Volume Target (SOL)</label>
         <div className="range-wrap">
-          <input type="range" min="1" max="200" step="1" value={volumeSettings.dailySolTarget}
+          <input type="range" min="1" max="100" step="1" value={volumeSettings.dailySolTarget}
             onChange={e => setVol('dailySolTarget', parseInt(e.target.value))} />
           <span className="range-val">{volumeSettings.dailySolTarget} SOL</span>
         </div>
@@ -112,6 +155,7 @@ export default function BoostTab() {
         <label>Trade Frequency</label>
         <select value={volumeSettings.frequencyMinutes}
           onChange={e => setVol('frequencyMinutes', parseInt(e.target.value))}>
+          <option value={10}>Every 10 minutes</option>
           <option value={5}>Every 5 minutes</option>
           <option value={2}>Every 2 minutes</option>
           <option value={1}>Every 1 minute</option>
@@ -119,9 +163,17 @@ export default function BoostTab() {
 
         <label>Max Trade Size (SOL)</label>
         <div className="range-wrap">
-          <input type="range" min="0.01" max="2" step="0.01" value={volumeSettings.maxTradeSol}
+          <input type="range" min="0.01" max="1" step="0.01" value={volumeSettings.maxTradeSol}
             onChange={e => setVol('maxTradeSol', parseFloat(e.target.value))} />
           <span className="range-val">{volumeSettings.maxTradeSol.toFixed(2)} SOL</span>
+        </div>
+
+        <div style={{
+          fontSize: 12, color: 'var(--muted)', marginBottom: 14,
+          background: 'rgba(255,255,255,0.02)', borderRadius: 8,
+          padding: '8px 12px', fontFamily: 'monospace',
+        }}>
+          Estimated daily usage: ~{totalSolNeeded} SOL across all wallets
         </div>
 
         {activeJob ? (
@@ -134,12 +186,12 @@ export default function BoostTab() {
                 </span>
               </div>
               <div className="job-stat">
-                <span className="js-label">Cycles</span>
+                <span className="js-label">Trades</span>
                 <span className="js-val">{activeJob.tradesExecuted}</span>
               </div>
               <div className="job-stat">
                 <span className="js-label">Volume</span>
-                <span className="js-val">{activeJob.totalVolumeSol?.toFixed(2)} SOL</span>
+                <span className="js-val">{activeJob.totalVolumeSol?.toFixed(3)} SOL</span>
               </div>
               <div className="job-stat">
                 <span className="js-label">Errors</span>
@@ -148,9 +200,33 @@ export default function BoostTab() {
                 </span>
               </div>
             </div>
+
+            {/* Trade history */}
+            {activeJob.history?.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Recent Trades</div>
+                {activeJob.history.slice(-5).reverse().map((h, i) => (
+                  <div key={i} style={{
+                    display: 'flex', gap: 10, alignItems: 'center',
+                    fontSize: 11, fontFamily: 'monospace', color: 'var(--muted)',
+                    padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  }}>
+                    <span style={{ color: h.action === 'buy' ? 'var(--green)' : 'var(--danger)', width: 30 }}>
+                      {h.action?.toUpperCase() || 'ERR'}
+                    </span>
+                    <span>{h.amountSol ? `${h.amountSol} SOL` : '—'}</span>
+                    <span style={{ flex: 1 }}>{h.wallet || ''}</span>
+                    <span style={{ color: h.status === 'success' ? 'var(--green)' : 'var(--danger)' }}>
+                      {h.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {activeJob.status === 'active' && (
-              <button className="btn btn-outline" style={{ marginTop: 10 }} onClick={handleStopJob}>
-                Stop Volume Job
+              <button className="btn btn-outline" style={{ marginTop: 12 }} onClick={handleStopJob}>
+                Stop Job
               </button>
             )}
           </div>
@@ -166,50 +242,7 @@ export default function BoostTab() {
 
         {!wallet.publicKey && (
           <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, textAlign: 'center' }}>
-            Connect wallet to start volume engine
-          </div>
-        )}
-      </div>
-
-      {/* Manual Buy */}
-      <div className="card">
-        <div className="card-title">Manual Buy</div>
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
-          Execute a single buy transaction directly from your connected wallet on any pump.fun token.
-        </p>
-        <div className="grid2" style={{ gap: '0.75rem' }}>
-          <div>
-            <label>Mint Address</label>
-            <input
-              type="text"
-              placeholder="Token mint..."
-              value={singleBuy.mintAddress}
-              onChange={e => setSingleBuy(s => ({ ...s, mintAddress: e.target.value }))}
-              style={{ fontFamily: 'monospace', fontSize: 12 }}
-            />
-          </div>
-          <div>
-            <label>Amount (SOL)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0.001"
-              value={singleBuy.solAmount}
-              onChange={e => setSingleBuy(s => ({ ...s, solAmount: parseFloat(e.target.value) }))}
-            />
-          </div>
-        </div>
-        <button
-          className="btn btn-outline"
-          style={{ marginTop: 12 }}
-          onClick={handleManualBuy}
-          disabled={buyLoading || !wallet.publicKey}
-        >
-          {buyLoading ? 'Sending...' : 'Execute Buy →'}
-        </button>
-        {!wallet.publicKey && (
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, textAlign: 'center' }}>
-            Connect wallet to execute buy
+            Connect wallet to start
           </div>
         )}
       </div>
