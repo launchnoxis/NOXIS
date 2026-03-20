@@ -14,6 +14,7 @@ export default function DashboardTab() {
   const [selectedToken, setSelectedToken] = useState(null);
   const [tokenInfo, setTokenInfo] = useState(null);
   const [tokenLoading, setTokenLoading] = useState(false);
+  const [noxisLaunches, setNoxisLaunches] = useState([]);
 
   useEffect(() => {
     if (!wallet.publicKey) { setBalance(null); setTokens([]); return; }
@@ -25,13 +26,15 @@ export default function DashboardTab() {
     setLoading(true);
     const addr = wallet.publicKey.toBase58();
     try {
-      const [balRes, tokRes] = await Promise.all([
+      const [balRes, tokRes, launchRes] = await Promise.all([
         getWalletBalance(addr),
         getWalletTokens(addr),
+        fetch(`https://noxis-backend-production.up.railway.app/api/token/launches/${addr}`).then(r => r.json()).catch(() => ({ launches: [] })),
       ]);
       setBalance(balRes.sol);
       setNetwork(balRes.network);
       setTokens(tokRes.tokens || []);
+      setNoxisLaunches(launchRes.launches || []);
     } catch {}
     setLoading(false);
   }
@@ -118,6 +121,37 @@ export default function DashboardTab() {
               {loading ? 'Refreshing...' : '↻ Refresh'}
             </button>
           </div>
+
+          {/* Noxis Launches */}
+          {noxisLaunches.length > 0 && (
+            <div className="card mb">
+              <div className="card-title">Launched via Noxis</div>
+              <div className="token-list">
+                {noxisLaunches.map(l => (
+                  <div
+                    key={l.mintAddress}
+                    className={`token-row ${selectedToken === l.mintAddress ? 'selected' : ''}`}
+                    onClick={() => loadTokenInfo(l.mintAddress)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{l.name} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>${l.symbol}</span></div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace', marginTop: 2 }}>{l.mintAddress.slice(0,8)}...{l.mintAddress.slice(-8)}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--muted)' }}>
+                      <div>{new Date(l.launchedAt).toLocaleDateString()}</div>
+                      <div style={{ marginTop: 2, display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                        {l.features?.mintRenounced && <span style={{ color: 'var(--green)', fontSize: 10 }}>✓ Mint</span>}
+                        {l.features?.freezeRenounced && <span style={{ color: 'var(--green)', fontSize: 10 }}>✓ Freeze</span>}
+                        {l.features?.devVesting && <span style={{ color: 'var(--green)', fontSize: 10 }}>✓ Vest</span>}
+                      </div>
+                    </div>
+                    <div className="tr-arrow">→</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Token holdings */}
           <div className="card mb">
