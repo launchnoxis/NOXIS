@@ -15,7 +15,10 @@ export default function BoostTab() {
     frequencyMinutes: 5,
     maxTradeSol: 0.1,
   });
-  const [activeJob, setActiveJob] = useState(null);
+  const [activeJob, setActiveJob] = useState(() => {
+    const saved = localStorage.getItem('noxis_boost_job');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [jobLoading, setJobLoading] = useState(false);
   const [copied, setCopied] = useState(null);
 
@@ -57,6 +60,7 @@ export default function BoostTab() {
         ownerWallet: wallet.publicKey.toBase58(),
       });
       setActiveJob(res.job);
+      localStorage.setItem('noxis_boost_job', JSON.stringify(res.job));
       toast.success('Volume job started');
     } catch (err) {
       toast.error(err.message);
@@ -70,6 +74,7 @@ export default function BoostTab() {
     try {
       await stopVolumeJob(activeJob.jobId);
       setActiveJob(s => ({ ...s, status: 'stopped' }));
+      localStorage.removeItem('noxis_boost_job');
       toast('Volume job stopped');
     } catch (err) {
       toast.error(err.message);
