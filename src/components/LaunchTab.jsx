@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSolanaWallet } from '../lib/wallet';
 import { buildLaunchTx, submitSignedTx } from '../lib/api';
-import NoxisLoader from './NoxisLoader';
 
 export default function LaunchTab() {
   const wallet = useSolanaWallet();
@@ -15,6 +14,33 @@ export default function LaunchTab() {
   const [launching, setLaunching] = useState(false);
   const [result, setResult] = useState(null);
   const [step, setStep] = useState(''); // current step label
+  const [mintKeypair, setMintKeypair] = useState(null);
+  const [mintAddress, setMintAddress] = useState('');
+
+  // Generate mint keypair on mount so CA is known pre-launch
+  React.useEffect(() => {
+    async function genKeypair() {
+      const { Keypair } = await import('@solana/web3.js');
+      const bs58 = await import('bs58');
+      const bs58Encode = bs58.default?.encode || bs58.encode;
+      const kp = Keypair.generate();
+      const secretKeyEncoded = bs58Encode(new Uint8Array(kp.secretKey));
+      setMintKeypair(secretKeyEncoded);
+      setMintAddress(kp.publicKey.toBase58());
+    }
+    genKeypair();
+  }, []);
+
+  function regenerateKeypair() {
+    import('@solana/web3.js').then(({ Keypair }) => {
+      import('bs58').then(bs58 => {
+        const bs58Encode = bs58.default?.encode || bs58.encode;
+        const kp = Keypair.generate();
+        setMintKeypair(bs58Encode(new Uint8Array(kp.secretKey)));
+        setMintAddress(kp.publicKey.toBase58());
+      });
+    });
+  }
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -31,6 +57,7 @@ export default function LaunchTab() {
         creatorWallet: wallet.publicKey.toBase58(),
         ...form,
         symbol: form.symbol.toUpperCase(),
+        mintSecretKey: mintKeypair,
       });
 
       // Lightning API handles everything — no wallet signing needed
@@ -42,6 +69,8 @@ export default function LaunchTab() {
         explorerUrl: buildRes.explorerUrl,
       });
       toast.success('Token launched successfully!');
+      // Generate fresh keypair for next launch
+      regenerateKeypair();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -52,7 +81,6 @@ export default function LaunchTab() {
 
   return (
     <div className="tab-content">
-      <NoxisLoader visible={launching} message={step || 'Launching token...'} />
       <div className="page-hero">
         <div className="hero-label">Solana · pump.fun</div>
         <h1 className="hero-title">Launch your token.<br/><span className="hero-highlight">In one click.</span></h1>
@@ -112,7 +140,26 @@ export default function LaunchTab() {
               <div>
                 <div className="token-name">{form.name || 'My Token'}</div>
                 <div className="token-sym">${form.symbol || 'TOKEN'}</div>
-                <div className="badges-row">
+                {mintAddress && (
+              <div style={{
+                marginTop: 8, fontFamily: 'monospace', fontSize: 10,
+                color: 'rgba(255,255,255,0.35)', lineHeight: 1.6,
+              }}>
+                <div style={{ marginBottom: 2, color: 'rgba(255,255,255,0.2)', fontSize: 9, letterSpacing: '0.1em' }}>CONTRACT ADDRESS</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{mintAddress.slice(0,12)}...{mintAddress.slice(-8)}</span>
+                  <button onClick={() => { navigator.clipboard.writeText(mintAddress); toast.success('CA copied!'); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--green)', fontSize: 10, padding: 0 }}>
+                    Copy
+                  </button>
+                  <button onClick={regenerateKeypair}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: 10, padding: 0 }}>
+                    ↻
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="badges-row">
                   <span className="badge badge-green">pump.fun</span>
                   <span className="badge badge-purple">Anti-Rug</span>
                 </div>
