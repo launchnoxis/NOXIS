@@ -47,6 +47,7 @@ export default function LaunchTab() {
   async function handleLaunch() {
     if (!wallet.publicKey) return toast.error('Connect your wallet first');
     if (!form.name || !form.symbol) return toast.error('Name and symbol are required');
+    if (!mintKeypair) return toast.error('Keypair not ready yet, wait a moment and try again');
 
     setLaunching(true);
     setResult(null);
@@ -193,7 +194,7 @@ export default function LaunchTab() {
           <button
             className={`btn btn-primary${launching ? ' loading' : ''}`}
             onClick={handleLaunch}
-            disabled={launching || !wallet.publicKey}
+            disabled={launching || !wallet.publicKey || !mintKeypair}
           >
             {launching ? (
               <><span className="spinner" /> {step || 'Launching...'}</>
