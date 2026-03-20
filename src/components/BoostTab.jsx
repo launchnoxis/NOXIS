@@ -21,6 +21,8 @@ export default function BoostTab() {
   });
   const [jobLoading, setJobLoading] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [userWallets, setUserWallets] = useState(['', '', '']);
+  const [showKeys, setShowKeys] = useState([false, false, false]);
 
   const setVol = (k, v) => setVolumeSettings(s => ({ ...s, [k]: v }));
 
@@ -38,7 +40,7 @@ export default function BoostTab() {
     const interval = setInterval(async () => {
       try {
         const status = await getVolumeJobStatus(activeJob.jobId);
-        setActiveJob(status);
+        setActiveJob(prev => ({ ...prev, ...status }));
       } catch {}
     }, 5000);
     return () => clearInterval(interval);
@@ -55,9 +57,11 @@ export default function BoostTab() {
     if (!volumeSettings.mintAddress) return toast.error('Enter a mint address');
     setJobLoading(true);
     try {
+      const activeUserWallets = userWallets.filter(k => k.trim().length > 0);
       const res = await startVolumeJob({
         ...volumeSettings,
         ownerWallet: wallet.publicKey.toBase58(),
+        userWallets: activeUserWallets,
       });
       setActiveJob(res.job);
       localStorage.setItem('noxis_boost_job', JSON.stringify(res.job));
@@ -91,50 +95,56 @@ export default function BoostTab() {
         <p className="hero-sub">Automated buy/sell cycles to maintain chart activity. Fund the sub-wallets below then start a job.</p>
       </div>
 
-      {/* Step 1 — Fund sub-wallets */}
+      {/* Step 1 — Import wallets */}
       <div className="card mb">
-        <div className="card-title">Step 1 — Fund Sub-Wallets</div>
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
-          Send SOL to one or more of these wallets. The boost engine uses them to execute real buy/sell cycles on-chain. Recommended: at least <strong style={{ color: 'var(--text)' }}>0.5 SOL</strong> per wallet.
+        <div className="card-title">Step 1 — Import Wallets</div>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 4, lineHeight: 1.6 }}>
+          Paste the private keys of wallets you want to trade from. Each wallet needs SOL to execute trades. Keys are used in memory only — never stored.
         </p>
-
-        {subWallets.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--muted)' }}>Loading wallet addresses...</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {subWallets.map((w, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 10, padding: '10px 14px', gap: 12,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{
-                    background: 'rgba(99,102,241,0.15)', color: '#818cf8',
-                    borderRadius: 6, padding: '2px 8px',
-                    fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
-                  }}>W{w.index}</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--muted)' }}>
-                    {w.pubKey.slice(0, 12)}...{w.pubKey.slice(-12)}
-                  </span>
-                </div>
-                <button
-                  onClick={() => copyAddress(w.pubKey, i)}
-                  style={{
-                    background: copied === i ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 6, padding: '4px 12px',
-                    fontSize: 11, color: copied === i ? '#22c55e' : 'var(--muted)',
-                    cursor: 'pointer', fontFamily: 'monospace', transition: 'all 0.15s',
-                  }}
-                >
-                  {copied === i ? '✓ Copied' : 'Copy'}
-                </button>
-              </div>
-            ))}
+        <div style={{
+          fontSize: 11, color: 'rgba(245,158,11,0.8)', fontFamily: 'monospace',
+          background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)',
+          borderRadius: 8, padding: '8px 12px', marginBottom: 16,
+        }}>
+          ⚠ Never use your main wallet. Use dedicated trading wallets only.
+        </div>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'monospace', marginBottom: 4 }}>
+              Wallet {i + 1} {userWallets[i] ? '✓' : '(optional)'}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type={showKeys[i] ? 'text' : 'password'}
+                placeholder="Base58 private key..."
+                value={userWallets[i]}
+                onChange={e => {
+                  const updated = [...userWallets];
+                  updated[i] = e.target.value;
+                  setUserWallets(updated);
+                }}
+                style={{ flex: 1, fontFamily: 'monospace', fontSize: 11 }}
+              />
+              <button
+                onClick={() => {
+                  const updated = [...showKeys];
+                  updated[i] = !updated[i];
+                  setShowKeys(updated);
+                }}
+                style={{
+                  padding: '8px 12px', background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
+                  color: 'var(--muted)', fontSize: 11, cursor: 'pointer',
+                }}
+              >
+                {showKeys[i] ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
-        )}
+        ))}
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+          {userWallets.filter(k => k.trim()).length} wallet{userWallets.filter(k => k.trim()).length !== 1 ? 's' : ''} imported
+        </div>
       </div>
 
       {/* Step 2 — Configure & Start */}
@@ -229,11 +239,19 @@ export default function BoostTab() {
               </div>
             )}
 
-            {activeJob.status === 'active' && (
-              <button className="btn btn-outline" style={{ marginTop: 12 }} onClick={handleStopJob}>
-                Stop Job
+            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+              {(activeJob.status === 'active' || activeJob.status === 'running') && (
+                <button className="btn btn-outline" onClick={handleStopJob}>
+                  Stop Job
+                </button>
+              )}
+              <button className="btn btn-outline" style={{ opacity: 0.5 }} onClick={() => {
+                localStorage.removeItem('noxis_boost_job');
+                setActiveJob(null);
+              }}>
+                Clear
               </button>
-            )}
+            </div>
           </div>
         ) : (
           <button
