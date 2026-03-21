@@ -61,27 +61,11 @@ export default function LaunchTab() {
         mintSecretKey: mintKeypair,
       });
 
-      // Sign with user's wallet
-      setStep('Sign the transaction in your wallet...');
-      const { VersionedTransaction, Connection } = await import('@solana/web3.js');
-      const txBytes = Buffer.from(buildRes.transaction, 'base64');
-      const tx = VersionedTransaction.deserialize(txBytes);
-      const signedTx = await wallet.signTransaction(tx);
-
-      // Submit directly to Solana — user pays, user gets tokens
-      setStep('Submitting to Solana...');
-      const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=df6e4ab9-4411-414a-93e7-1ef173635b18');
-      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: true,
-        maxRetries: 3,
-      });
-
-      console.log('[launch] Submitted:', signature);
       setResult({
-        signature,
+        signature: buildRes.signature,
         mintAddress: buildRes.mintAddress,
         pumpFunUrl: buildRes.pumpFunUrl,
-        explorerUrl: `https://solscan.io/tx/${signature}`,
+        explorerUrl: buildRes.explorerUrl,
       });
       toast.success('Token launched successfully!');
       regenerateKeypair();
