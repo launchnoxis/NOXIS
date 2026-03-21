@@ -61,16 +61,31 @@ export default function LaunchTab() {
         mintSecretKey: mintKeypair,
       });
 
-      // Lightning API handles everything — no wallet signing needed
+      // Sign transaction with user's wallet
+      setStep('Sign the transaction in your wallet...');
+      const { VersionedTransaction, Connection } = await import('@solana/web3.js');
+      const txBytes = Buffer.from(buildRes.transaction, 'base64');
+      const tx = VersionedTransaction.deserialize(txBytes);
+
+      const signedTx = await wallet.signTransaction(tx);
+
+      // Submit to Solana
+      setStep('Submitting to Solana...');
+      const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=df6e4ab9-4411-414a-93e7-1ef173635b18');
+      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: true,
+        maxRetries: 3,
+      });
+
+      console.log('[launch] Submitted:', signature);
+
       setResult({
-        signature: buildRes.signature,
+        signature,
         mintAddress: buildRes.mintAddress,
-        metadataUri: buildRes.metadataUri,
         pumpFunUrl: buildRes.pumpFunUrl,
-        explorerUrl: buildRes.explorerUrl,
+        explorerUrl: `https://solscan.io/tx/${signature}`,
       });
       toast.success('Token launched successfully!');
-      // Generate fresh keypair for next launch
       regenerateKeypair();
     } catch (err) {
       toast.error(err.message);
