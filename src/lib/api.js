@@ -17,11 +17,11 @@ const api = {
 };
 
 // LaunchTab
-export const buildLocalLaunchTx = (data) => api.post('/token/build-local', data);
-export const buildDevBuyTx = (data) => api.post('/token/build-buy', data);
+export const buildLocalLaunchTx = (data) => api.post('/api/token/build-local', data);
+export const buildDevBuyTx = (data) => api.post('/api/token/build-buy', data);
 
 // AntiRugTab
-export const previewVesting = (data) => api.post('/vesting/preview', data);
+export const previewVesting = (data) => api.post('/api/vesting/preview', data);
 
 // BoostTab
 export const startVolumeJob = (data) => api.post('/api/boost/start', data);
