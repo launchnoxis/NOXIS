@@ -58,6 +58,10 @@ export default function LaunchTab() {
       setMintPreview(buildRes.mintAddress);
       console.log('[LaunchTab] Mint address:', buildRes.mintAddress);
       toast.success('Contract: ' + buildRes.mintAddress.slice(0, 8) + '...');
+      // Show balance warning if dev buy was adjusted
+      if (buildRes.balanceWarning) {
+        toast(buildRes.balanceWarning, { icon: '\u26A0\uFE0F', duration: 6000 });
+      }
 
       // Step 2: Sign with user's wallet and submit
       setStep('Approve in your wallet...');
