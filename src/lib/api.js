@@ -16,10 +16,21 @@ const api = {
   },
 };
 
+// LaunchTab
 export const buildLocalLaunchTx = (data) => api.post('/token/build-local', data);
-
 export const buildDevBuyTx = (data) => api.post('/token/build-buy', data);
 
+// AntiRugTab
 export const previewVesting = (data) => api.post('/vesting/preview', data);
+
+// BoostTab
+export const startVolumeJob = (data) => api.post('/api/boost/start', data);
+export const stopVolumeJob = (jobId) => api.post('/api/boost/stop', { jobId });
+export const getVolumeJobStatus = (jobId) => api.get('/api/boost/status/' + jobId);
+
+// DashboardTab
+export const getWalletBalance = (wallet) => api.get('/api/wallet/balance/' + wallet);
+export const getWalletTokens = (wallet) => api.get('/api/wallet/tokens/' + wallet);
+export const listVolumeJobs = (wallet) => api.get('/api/boost/jobs/' + (wallet || ''));
 
 export default api;
