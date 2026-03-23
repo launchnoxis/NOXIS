@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSolanaWallet } from '../lib/wallet';
-import { buildLocalLaunchTx } from '../lib/api';
+import { buildLocalLaunchTx, buildDevBuyTx } from '../lib/api';
 
 export default function LaunchTab() {
   const wallet = useSolanaWallet();
@@ -34,7 +34,7 @@ export default function LaunchTab() {
     setMintPreview(null);
 
     try {
-      // Step 1: Build the partially-signed transaction(s)
+      // Step 1: Build the create transaction (amount=0, no dev buy yet)
       setStep('Uploading metadata & building transaction...');
       const buildRes = await buildLocalLaunchTx({
         userPublicKey: wallet.publicKey.toBase58(),
@@ -58,27 +58,42 @@ export default function LaunchTab() {
       console.log('[LaunchTab] Mint address:', buildRes.mintAddress);
       toast.success('Contract: ' + buildRes.mintAddress.slice(0, 8) + '...');
 
-      // Show balance warning if dev buy was adjusted
       if (buildRes.balanceWarning) {
         toast(buildRes.balanceWarning, { icon: '\u26A0\uFE0F', duration: 6000 });
       }
 
-      // Step 2: Sign CREATE transaction with user's wallet
+      // Step 2: Sign and send CREATE transaction
       setStep('Approve token creation in wallet...');
       const { signature } = await wallet.signAndSendTransaction(buildRes.transaction);
       console.log('[LaunchTab] Create tx sent! Signature:', signature);
+      toast.success('Token created on-chain!');
 
-      // Step 3: If dev buy transaction exists, sign and send it too
+      // Step 3: If dev buy requested, wait for confirmation then build + sign buy tx
       let buySignature = null;
-      if (buildRes.devBuyTransaction) {
-        toast.success('Token created! Now approve the dev buy...');
-        setStep('Approve dev buy (' + (buildRes.devBuyAmount || form.devBuySol) + ' SOL) in wallet...');
+      if (form.devBuySol > 0) {
+        setStep('Waiting for token to appear on bonding curve...');
+        // Give Solana a moment to finalize the create tx
+        await new Promise((r) => setTimeout(r, 5000));
 
+        setStep('Building dev buy transaction...');
         try {
-          const buyResult = await wallet.signAndSendTransaction(buildRes.devBuyTransaction);
-          buySignature = buyResult.signature;
-          console.log('[LaunchTab] Dev buy tx sent! Signature:', buySignature);
-          toast.success('Dev buy successful!');
+          const buyRes = await buildDevBuyTx({
+            userPublicKey: wallet.publicKey.toBase58(),
+            mint: buildRes.mintAddress,
+            amountSol: form.devBuySol,
+            slippageBps: form.slippageBps,
+          });
+
+          if (buyRes.success && buyRes.transaction) {
+            setStep('Approve dev buy (' + form.devBuySol + ' SOL) in wallet...');
+            const buyResult = await wallet.signAndSendTransaction(buyRes.transaction);
+            buySignature = buyResult.signature;
+            console.log('[LaunchTab] Dev buy tx sent! Signature:', buySignature);
+            toast.success('Dev buy successful!');
+          } else {
+            console.warn('[LaunchTab] Dev buy build failed:', buyRes.error);
+            toast('Could not build dev buy: ' + (buyRes.error || 'Unknown error') + '. You can buy manually on pump.fun.', { icon: '\u26A0\uFE0F', duration: 8000 });
+          }
         } catch (buyErr) {
           console.warn('[LaunchTab] Dev buy failed:', buyErr);
           if (buyErr.message && buyErr.message.includes('User rejected')) {
