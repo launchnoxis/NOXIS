@@ -34,9 +34,8 @@ export default function LaunchTab() {
     setMintPreview(null);
 
     try {
-      // Step 1: Build the partially-signed transaction
+      // Step 1: Build the partially-signed transaction(s)
       setStep('Uploading metadata & building transaction...');
-
       const buildRes = await buildLocalLaunchTx({
         userPublicKey: wallet.publicKey.toBase58(),
         name: form.name,
@@ -58,23 +57,45 @@ export default function LaunchTab() {
       setMintPreview(buildRes.mintAddress);
       console.log('[LaunchTab] Mint address:', buildRes.mintAddress);
       toast.success('Contract: ' + buildRes.mintAddress.slice(0, 8) + '...');
+
       // Show balance warning if dev buy was adjusted
       if (buildRes.balanceWarning) {
         toast(buildRes.balanceWarning, { icon: '\u26A0\uFE0F', duration: 6000 });
       }
 
-      // Step 2: Sign with user's wallet and submit
-      setStep('Approve in your wallet...');
-
+      // Step 2: Sign CREATE transaction with user's wallet
+      setStep('Approve token creation in wallet...');
       const { signature } = await wallet.signAndSendTransaction(buildRes.transaction);
+      console.log('[LaunchTab] Create tx sent! Signature:', signature);
 
-      console.log('[LaunchTab] Token launched! Signature:', signature);
+      // Step 3: If dev buy transaction exists, sign and send it too
+      let buySignature = null;
+      if (buildRes.devBuyTransaction) {
+        toast.success('Token created! Now approve the dev buy...');
+        setStep('Approve dev buy (' + (buildRes.devBuyAmount || form.devBuySol) + ' SOL) in wallet...');
+
+        try {
+          const buyResult = await wallet.signAndSendTransaction(buildRes.devBuyTransaction);
+          buySignature = buyResult.signature;
+          console.log('[LaunchTab] Dev buy tx sent! Signature:', buySignature);
+          toast.success('Dev buy successful!');
+        } catch (buyErr) {
+          console.warn('[LaunchTab] Dev buy failed:', buyErr);
+          if (buyErr.message && buyErr.message.includes('User rejected')) {
+            toast('Dev buy skipped (rejected). Token was still created!', { icon: '\u26A0\uFE0F', duration: 6000 });
+          } else {
+            toast('Dev buy failed: ' + (buyErr.message || 'Unknown error') + '. Token was still created!', { icon: '\u26A0\uFE0F', duration: 8000 });
+          }
+        }
+      }
 
       setResult({
         signature,
+        buySignature,
         mintAddress: buildRes.mintAddress,
         pumpFunUrl: 'https://pump.fun/coin/' + buildRes.mintAddress,
         explorerUrl: 'https://solscan.io/tx/' + signature,
+        buyExplorerUrl: buySignature ? 'https://solscan.io/tx/' + buySignature : null,
       });
 
       toast.success('Token launched successfully!');
@@ -92,6 +113,7 @@ export default function LaunchTab() {
       setStep('');
     }
   }
+
   return (
     <div className="tab-content">
       <div className="page-hero">
@@ -114,7 +136,6 @@ export default function LaunchTab() {
             <label>Token Image</label>
             <ImageUploader value={form.imageUrl} onChange={(url) => set('imageUrl', url)} />
           </div>
-
           <div className="card">
             <div className="card-title">Socials</div>
             <label>Twitter / X</label>
@@ -149,6 +170,7 @@ export default function LaunchTab() {
                 </div>
               </div>
             </div>
+
             {/* Early mint preview - shows contract address before launch */}
             {mintPreview && (
               <div className="mint-preview" style={{ marginTop: '0.75rem', padding: '0.6rem 0.8rem', background: 'rgba(124,58,237,0.1)', borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)' }}>
@@ -158,11 +180,13 @@ export default function LaunchTab() {
             )}
 
             <div className="section-head" style={{ marginTop: '1rem' }}>Launch Settings</div>
+
             <label>Initial Dev Buy (SOL)</label>
             <div className="range-wrap">
               <input type="range" min="0" max="5" step="0.1" value={form.devBuySol} onChange={(e) => set('devBuySol', parseFloat(e.target.value))} />
               <span className="range-val">{form.devBuySol.toFixed(1)} SOL</span>
             </div>
+
             <label>Slippage Tolerance</label>
             <div className="range-wrap">
               <input type="range" min="100" max="3000" step="100" value={form.slippageBps} onChange={(e) => set('slippageBps', parseInt(e.target.value))} />
@@ -186,7 +210,10 @@ export default function LaunchTab() {
             <div className="launch-result">
               <div className="result-title">Token Launched!</div>
               <div className="result-row"><span className="rl">Mint</span><a href={result.pumpFunUrl} target="_blank" rel="noreferrer" className="rlink">{result.mintAddress.slice(0, 8)}...{result.mintAddress.slice(-8)}</a></div>
-              <div className="result-row"><span className="rl">TX</span><a href={result.explorerUrl} target="_blank" rel="noreferrer" className="rlink">{result.signature.slice(0, 12)}...</a></div>
+              <div className="result-row"><span className="rl">Create TX</span><a href={result.explorerUrl} target="_blank" rel="noreferrer" className="rlink">{result.signature.slice(0, 12)}...</a></div>
+              {result.buySignature && (
+                <div className="result-row"><span className="rl">Dev Buy TX</span><a href={result.buyExplorerUrl} target="_blank" rel="noreferrer" className="rlink">{result.buySignature.slice(0, 12)}...</a></div>
+              )}
               <div className="result-links">
                 <a href={result.pumpFunUrl} target="_blank" rel="noreferrer" className="btn-sm">View on pump.fun</a>
                 <a href={result.explorerUrl} target="_blank" rel="noreferrer" className="btn-sm">Solscan</a>
@@ -198,21 +225,42 @@ export default function LaunchTab() {
     </div>
   );
 }
+
 function ImageUploader({ value, onChange }) {
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState(value || null);
   const inputRef = React.useRef();
+
   function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) return;
     const reader = new FileReader();
-    reader.onload = (e) => { setPreview(e.target.result); onChange(e.target.result); };
+    reader.onload = (e) => {
+      setPreview(e.target.result);
+      onChange(e.target.result);
+    };
     reader.readAsDataURL(file);
   }
-  function handleDrop(e) { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }
-  function handleUrlInput(e) { setPreview(e.target.value); onChange(e.target.value); }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    handleFile(e.dataTransfer.files[0]);
+  }
+
+  function handleUrlInput(e) {
+    setPreview(e.target.value);
+    onChange(e.target.value);
+  }
+
   return (
     <div>
-      <div className={'img-drop-zone' + (dragging ? ' dragging' : '')} onClick={() => inputRef.current.click()} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}>
+      <div
+        className={'img-drop-zone' + (dragging ? ' dragging' : '')}
+        onClick={() => inputRef.current.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+      >
         <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files[0])} />
         {preview ? (
           <div className="img-preview-wrap"><img src={preview} alt="preview" className="img-preview" /><span className="img-change">Click to change</span></div>
@@ -250,8 +298,11 @@ function WalletStatus({ wallet }) {
 function WalletConnectButton() {
   const { select, wallets } = useSolanaWallet();
   const [open, setOpen] = useState(false);
+
   const readyWallets = wallets.filter((w) => w.readyState === 'Installed' || w.readyState === 'Loadable');
+
   if (!open) return <button className="btn-sm" onClick={() => setOpen(true)}>Connect</button>;
+
   return (
     <div className="wallet-list">
       {readyWallets.length === 0 ? (
