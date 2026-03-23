@@ -1,44 +1,23 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: 'https://noxis-backend-production.up.railway.app/api',
-  timeout: 30_000,
-});
+const API_BASE = import.meta.env.VITE_API_URL || 'https://noxis-backend-production.up.railway.app';
 
-api.interceptors.response.use(
-  (res) => res.data,
-  (err) => {
-    const msg = err.response?.data?.error || err.message || 'Request failed';
-    return Promise.reject(new Error(msg));
-  }
-);
+const api = {
+  post: async (path, data) => {
+    const res = await axios.post(API_BASE + path, data, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 60000,
+    });
+    return res.data;
+  },
+  get: async (path) => {
+    const res = await axios.get(API_BASE + path, { timeout: 30000 });
+    return res.data;
+  },
+};
 
-// ─── Token ──────────────────────────────────────────────────────────────────────
-
-// Legacy: Lightning API launch (backend signs and submits)
-export const buildLaunchTx  = (data) => api.post('/token/build', data);
-export const submitSignedTx = (data) => api.post('/token/submit', data);
-
-// NEW: Local launch — returns partially-signed tx for user wallet to complete
 export const buildLocalLaunchTx = (data) => api.post('/token/build-local', data);
 
-export const getTokenStatus = (sig) => api.get('/token/status/' + sig);
-export const getTokenInfo   = (mint) => api.get('/token/info/' + mint);
-
-// ─── Wallet ─────────────────────────────────────────────────────────────────────
-export const getWalletBalance = (address) => api.get('/wallet/balance/' + address);
-export const getWalletTokens  = (address) => api.get('/wallet/tokens/' + address);
-export const getNetwork       = () => api.get('/wallet/network');
-
-// ─── Vesting ────────────────────────────────────────────────────────────────────
-export const previewVesting = (data) => api.post('/vesting/preview', data);
-export const buildVestingTx = (data) => api.post('/vesting/build', data);
-
-// ─── Boost ──────────────────────────────────────────────────────────────────────
-export const startVolumeJob     = (data) => api.post('/boost/volume/start', data);
-export const stopVolumeJob      = (id) => api.post('/boost/volume/stop/' + id);
-export const getVolumeJobStatus = (id) => api.get('/boost/volume/status/' + id);
-export const listVolumeJobs     = (wallet) => api.get('/boost/volume/list?wallet=' + (wallet || ''));
-export const buildBoostBuy      = (data) => api.post('/boost/buy', data);
+export const buildDevBuyTx = (data) => api.post('/token/build-buy', data);
 
 export default api;
