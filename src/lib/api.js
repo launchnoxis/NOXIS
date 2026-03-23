@@ -20,4 +20,6 @@ export const buildLocalLaunchTx = (data) => api.post('/token/build-local', data)
 
 export const buildDevBuyTx = (data) => api.post('/token/build-buy', data);
 
+export const previewVesting = (data) => api.post('/vesting/preview', data);
+
 export default api;
